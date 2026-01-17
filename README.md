@@ -114,8 +114,9 @@ Você pode encontrar exemplos detalhados de cada funcionalidade no diretório [`
 ### Autenticação
 - [Basic Auth](cmd/examples/auth/basicauth/main.go)
 - [OAuth2 Básico](cmd/examples/auth/oauth/basic/main.go)
-- [OAuth2 com Cache Customizado](cmd/examples/auth/oauth/cache_custom/main.go)
-- [OAuth2 com Cache Redis](cmd/examples/auth/oauth/cache_redis/main.go)
+- [OAuth2 com Resposta Customizada (Generics)](cmd/examples/auth/oauth/custom/main.go)
+- [OAuth2 com Cache Customizado](cmd/examples/auth/oauth/cache/custom/main.go)
+- [OAuth2 com Cache Redis](cmd/examples/auth/oauth/cache/redis/main.go)
 - [mTLS via Base64](cmd/examples/auth/mtls/base64/main.go)
 - [mTLS via Arquivo Único](cmd/examples/auth/mtls/file/main.go)
 - [mTLS via Múltiplos Arquivos](cmd/examples/auth/mtls/files/main.go)

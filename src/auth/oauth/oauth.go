@@ -17,8 +17,14 @@ import (
 	"go.uber.org/zap"
 )
 
+// TokenResponse define a interface para extrair informações do token.
+type TokenResponse interface {
+	GetAccessToken() string
+	GetExpiresIn() int64
+}
+
 // Config contém as configurações para o fluxo OAuth2 client_credentials.
-type Config struct {
+type Config[T TokenResponse] struct {
 	TokenURL     string
 	ClientID     string
 	ClientSecret string
@@ -39,10 +45,10 @@ type Config struct {
 }
 
 // TokenSource gerencia a obtenção e renovação de tokens OAuth2.
-type TokenSource struct {
+type TokenSource[T TokenResponse] struct {
 	httpClient *http.Client
 	logger     *zap.Logger
-	cfg        Config
+	cfg        Config[T]
 
 	mu            sync.Mutex
 	token         string
@@ -52,7 +58,7 @@ type TokenSource struct {
 }
 
 // NewTokenSource cria um novo TokenSource.
-func NewTokenSource(httpClient *http.Client, logger *zap.Logger, cfg Config) *TokenSource {
+func NewTokenSource[T TokenResponse](httpClient *http.Client, logger *zap.Logger, cfg Config[T]) *TokenSource[T] {
 	if cfg.RefreshBefore == 0 {
 		cfg.RefreshBefore = 30 * time.Second
 	}
@@ -62,7 +68,7 @@ func NewTokenSource(httpClient *http.Client, logger *zap.Logger, cfg Config) *To
 	if logger == nil {
 		logger = zap.NewNop()
 	}
-	return &TokenSource{
+	return &TokenSource[T]{
 		httpClient:    httpClient,
 		logger:        logger,
 		cfg:           cfg,
@@ -72,7 +78,7 @@ func NewTokenSource(httpClient *http.Client, logger *zap.Logger, cfg Config) *To
 }
 
 // Apply aplica o token de acesso no header Authorization da request.
-func (s *TokenSource) Apply(req *http.Request) error {
+func (s *TokenSource[T]) Apply(req *http.Request) error {
 	if s == nil || req == nil {
 		return nil
 	}
@@ -84,11 +90,14 @@ func (s *TokenSource) Apply(req *http.Request) error {
 	return nil
 }
 
-type oauthTokenResponse struct {
+type DefaultTokenResponse struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
 	ExpiresIn   int64  `json:"expires_in"`
 }
+
+func (r DefaultTokenResponse) GetAccessToken() string { return r.AccessToken }
+func (r DefaultTokenResponse) GetExpiresIn() int64    { return r.ExpiresIn }
 
 type oauthCachedToken struct {
 	AccessToken string `json:"access_token"`
@@ -96,7 +105,7 @@ type oauthCachedToken struct {
 }
 
 // Token retorna um token válido, buscando do cache ou do endpoint se necessário.
-func (s *TokenSource) Token(ctx context.Context) (string, error) {
+func (s *TokenSource[T]) Token(ctx context.Context) (string, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -154,19 +163,19 @@ func (s *TokenSource) Token(ctx context.Context) (string, error) {
 	return s.token, nil
 }
 
-func (s *TokenSource) shouldRefreshLocked() bool {
+func (s *TokenSource[T]) shouldRefreshLocked() bool {
 	if s.expiresAt.IsZero() {
 		return true
 	}
 	return s.now().Add(s.refreshBefore).After(s.expiresAt)
 }
 
-func (s *TokenSource) cacheKey() string {
+func (s *TokenSource[T]) cacheKey() string {
 	sum := sha256.Sum256([]byte(s.cfg.ClientID + ":" + s.cfg.ClientSecret))
 	return "goxios:oauth:" + hex.EncodeToString(sum[:])
 }
 
-func (s *TokenSource) fetchToken(ctx context.Context) (string, int64, error) {
+func (s *TokenSource[T]) fetchToken(ctx context.Context) (string, int64, error) {
 	form := url.Values{}
 	form.Set("grant_type", "client_credentials")
 	if len(s.cfg.Scopes) > 0 {
@@ -194,12 +203,12 @@ func (s *TokenSource) fetchToken(ctx context.Context) (string, int64, error) {
 		return "", 0, errors.New("oauth: token endpoint returned error: " + resp.Status + " body=" + string(b))
 	}
 
-	var tr oauthTokenResponse
+	var tr T
 	if err := json.NewDecoder(resp.Body).Decode(&tr); err != nil {
 		return "", 0, err
 	}
-	if tr.AccessToken == "" {
+	if tr.GetAccessToken() == "" {
 		return "", 0, errors.New("oauth: empty access_token")
 	}
-	return tr.AccessToken, tr.ExpiresIn, nil
+	return tr.GetAccessToken(), tr.GetExpiresIn(), nil
 }

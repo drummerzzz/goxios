@@ -31,7 +31,7 @@ func TestTokenSource_RenewToken(t *testing.T) {
 	}))
 	t.Cleanup(tokenSrv.Close)
 
-	src := NewTokenSource(http.DefaultClient, nil, Config{
+	src := NewTokenSource(http.DefaultClient, nil, Config[DefaultTokenResponse]{
 		TokenURL:      tokenSrv.URL,
 		ClientID:      "id",
 		ClientSecret:  "secret",
@@ -105,7 +105,7 @@ func TestTokenSource_UsesExternalCache(t *testing.T) {
 	}))
 	t.Cleanup(tokenSrv.Close)
 
-	src := NewTokenSource(http.DefaultClient, nil, Config{
+	src := NewTokenSource(http.DefaultClient, nil, Config[DefaultTokenResponse]{
 		TokenURL:      tokenSrv.URL,
 		ClientID:      "id",
 		ClientSecret:  "secret",
@@ -127,7 +127,7 @@ func TestTokenSource_UsesExternalCache(t *testing.T) {
 	}
 
 	// New Source, same config/cache: should read from cache and not call token endpoint
-	src2 := NewTokenSource(http.DefaultClient, nil, Config{
+	src2 := NewTokenSource(http.DefaultClient, nil, Config[DefaultTokenResponse]{
 		TokenURL:      tokenSrv.URL,
 		ClientID:      "id",
 		ClientSecret:  "secret",
@@ -145,6 +145,41 @@ func TestTokenSource_UsesExternalCache(t *testing.T) {
 	}
 	if tokenCalls.Load() != 1 {
 		t.Fatalf("new Source should use cache and not call token endpoint; got=%d", tokenCalls.Load())
+	}
+}
+
+type customTokenResponse struct {
+	MyToken   string `json:"token"`
+	ExpiresAt int64  `json:"expires_at"`
+}
+
+func (r customTokenResponse) GetAccessToken() string { return r.MyToken }
+func (r customTokenResponse) GetExpiresIn() int64   { return r.ExpiresAt }
+
+func TestTokenSource_CustomResponse(t *testing.T) {
+	t.Parallel()
+
+	tokenSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"token":      "custom-token",
+			"expires_at": 123,
+		})
+	}))
+	t.Cleanup(tokenSrv.Close)
+
+	src := NewTokenSource(http.DefaultClient, nil, Config[customTokenResponse]{
+		TokenURL:     tokenSrv.URL,
+		ClientID:     "id",
+		ClientSecret: "secret",
+	})
+
+	tok, err := src.Token(context.Background())
+	if err != nil {
+		t.Fatalf("Token() err=%v", err)
+	}
+	if tok != "custom-token" {
+		t.Fatalf("expected custom-token; got=%v", tok)
 	}
 }
 

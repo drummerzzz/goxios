@@ -8,10 +8,23 @@ import (
 )
 
 // OAuthClientCredentialsConfig re-exporta Config do pacote oauth para conveniência.
-type OAuthClientCredentialsConfig = oauth.Config
+// Por padrão usa oauth.DefaultTokenResponse.
+type OAuthClientCredentialsConfig = oauth.Config[oauth.DefaultTokenResponse]
 
 // WithOAuthClientCredentials define auth default do client via OAuth2 client_credentials.
 func WithOAuthClientCredentials(cfg OAuthClientCredentialsConfig) Option {
+	return func(c *Client) error {
+		if c == nil {
+			return nil
+		}
+		src := oauth.NewTokenSource(c.httpClient, c.logger, cfg)
+		c.defaultAuth = src.Apply
+		return nil
+	}
+}
+
+// WithOAuthClientCredentialsCustom permite definir auth OAuth2 com uma struct de resposta customizada.
+func WithOAuthClientCredentialsCustom[T oauth.TokenResponse](cfg oauth.Config[T]) Option {
 	return func(c *Client) error {
 		if c == nil {
 			return nil
