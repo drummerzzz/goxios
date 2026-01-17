@@ -16,7 +16,7 @@ Goxios é uma biblioteca de cliente HTTP para Go (Golang), inspirada no Axios do
 ## 📦 Instalação
 
 ```bash
-go get github.com/drummerzzz/goxios
+go get github.com/drummerzzz/goxios@v0.1.0
 ```
 
 ## 🛠️ Como usar
@@ -45,7 +45,7 @@ func main() {
     }
 
     if resp.Ok() {
-        fmt.Println("Status:", resp.StatusCode())
+        fmt.Println("Status:", resp.StatusCode)
     }
 }
 ```
@@ -106,6 +106,45 @@ user, err := goxios.JsonAs[User](resp)
 // Ou decodificando em um map
 data, err := resp.JsonMap()
 ```
+
+## 📖 Exemplos
+
+Você pode encontrar exemplos detalhados de cada funcionalidade no diretório [`cmd/examples`](cmd/examples).
+
+### Autenticação
+- [Basic Auth](cmd/examples/auth/basicauth/main.go)
+- [OAuth2 Básico](cmd/examples/auth/oauth/basic/main.go)
+- [OAuth2 com Cache Customizado](cmd/examples/auth/oauth/cache_custom/main.go)
+- [OAuth2 com Cache Redis](cmd/examples/auth/oauth/cache_redis/main.go)
+- [mTLS via Base64](cmd/examples/auth/mtls/base64/main.go)
+- [mTLS via Arquivo Único](cmd/examples/auth/mtls/file/main.go)
+- [mTLS via Múltiplos Arquivos](cmd/examples/auth/mtls/files/main.go)
+
+### Configurações do Cliente
+- [Base URL Padrão](cmd/examples/baseUrl/default/main.go)
+- [Base URL por Requisição](cmd/examples/baseUrl/request/main.go)
+- [Headers Padrão](cmd/examples/headers/default/main.go)
+- [Headers por Requisição](cmd/examples/headers/request/main.go)
+- [Logger (Zap)](cmd/examples/logger/main.go)
+- [Proxy](cmd/examples/proxy/main.go)
+- [Timeout](cmd/examples/timeout/main.go)
+
+### Métodos HTTP
+- [GET](cmd/examples/methods/get/main.go)
+- [POST](cmd/examples/methods/post/main.go)
+- [PUT](cmd/examples/methods/put/main.go)
+- [DELETE](cmd/examples/methods/delete/main.go)
+- [PATCH](cmd/examples/methods/patch/main.go)
+- [HEAD](cmd/examples/methods/head/main.go)
+- [OPTIONS](cmd/examples/methods/options/main.go)
+
+### Respostas e JSON
+- [Decodificar como Struct (Generics)](cmd/examples/responses/json_as/main.go)
+- [Decodificar para Struct Existente](cmd/examples/responses/json_into/main.go)
+- [Decodificar como Map](cmd/examples/responses/json_map/main.go)
+- [Obter Headers da Resposta](cmd/examples/responses/headers/main.go)
+- [Obter Bytes Brutos](cmd/examples/responses/raw_bytes/main.go)
+- [Verificar Sucesso (OK)](cmd/examples/responses/ok/main.go)
 
 ## 📂 Estrutura do Projeto
 

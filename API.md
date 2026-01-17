@@ -7,7 +7,7 @@ Esta documentação detalha as funcionalidades da biblioteca Goxios, utilizando 
 O cliente é criado usando a função `goxios.New`, que aceita diversas opções de configuração.
 
 ### Base URL
-Define um prefixo para todas as requisições feitas por esse cliente.
+Define um prefixo para todas as requisições feitas por esse cliente. ([Exemplos](cmd/examples/baseUrl))
 ```go
 client, _ := goxios.New(goxios.WithBaseURL("https://api.example.com"))
 // Requisições agora podem usar caminhos relativos:
@@ -15,13 +15,13 @@ client.Get("/users").Do(ctx)
 ```
 
 ### Timeout
-Define o tempo limite para as requisições.
+Define o tempo limite para as requisições. ([Exemplo](cmd/examples/timeout))
 ```go
 client, _ := goxios.New(goxios.WithTimeout(10 * time.Second))
 ```
 
 ### Headers Padrão
-Define headers que serão enviados em todas as requisições.
+Define headers que serão enviados em todas as requisições. ([Exemplos](cmd/examples/headers))
 ```go
 client, _ := goxios.New(
     goxios.WithDefaultHeader("X-App-Name", "MinhaApp"),
@@ -32,15 +32,14 @@ client, _ := goxios.New(
 ```
 
 ### Logging
-Integração com o `zap.Logger`.
+Integração com o `zap.Logger`. ([Exemplo](cmd/examples/logger))
 ```go
 logger, _ := zap.NewDevelopment()
 client, _ := goxios.New(goxios.WithLogger(logger))
 ```
 
 ## 2. Métodos HTTP
-
-O Goxios suporta todos os métodos HTTP comuns de forma fluida.
+O Goxios suporta todos os métodos HTTP comuns de forma fluida. ([Exemplos](cmd/examples/methods))
 
 ```go
 client.Get("/get").Do(ctx)
@@ -53,8 +52,7 @@ client.Options("/options").Do(ctx)
 ```
 
 ## 3. Configuração da Requisição (Fluent API)
-
-Você pode customizar cada requisição individualmente antes de executá-la com `.Do()`.
+Você pode customizar cada requisição individualmente antes de executá-la com `.Do()`. ([Exemplos](cmd/examples/headers/request))
 
 ```go
 resp, err := client.Post("/resource", data).
@@ -66,6 +64,7 @@ resp, err := client.Post("/resource", data).
 ## 4. Autenticação
 
 ### Basic Auth
+([Exemplo](cmd/examples/auth/basicauth))
 ```go
 client, _ := goxios.New(goxios.WithBasicAuth("usuario", "senha"))
 ```
@@ -76,7 +75,7 @@ client, _ := goxios.New(goxios.WithBearerToken("seu-token-aqui"))
 ```
 
 ### OAuth2 Client Credentials
-Suporta renovação automática de tokens e cache.
+Suporta renovação automática de tokens e cache. ([Exemplo](cmd/examples/auth/oauth/basic))
 ```go
 client, _ := goxios.New(
     goxios.WithOAuthClientCredentials(goxios.OAuthClientCredentialsConfig{
@@ -88,7 +87,7 @@ client, _ := goxios.New(
 ```
 
 #### OAuth2 com Cache Redis
-Permite compartilhar o token entre múltiplas instâncias da aplicação.
+Permite compartilhar o token entre múltiplas instâncias da aplicação. ([Exemplo](cmd/examples/auth/oauth/cache_redis))
 ```go
 import "github.com/drummerzzz/goxios/src/cache/redis"
 
@@ -100,8 +99,7 @@ goxios.WithOAuthClientCredentials(goxios.OAuthClientCredentialsConfig{
 ```
 
 ## 5. Trabalhando com Respostas
-
-A struct `Response` oferece métodos para facilitar o consumo dos dados.
+A struct `Response` oferece métodos para facilitar o consumo dos dados. ([Exemplos](cmd/examples/responses))
 
 ### Verificação de Sucesso
 ```go
@@ -128,8 +126,7 @@ body, err := resp.RawBytes()
 ```
 
 ## 6. mTLS (Mutual TLS)
-
-O Goxios simplifica o uso de certificados digitais.
+O Goxios simplifica o uso de certificados digitais. ([Exemplos](cmd/examples/auth/mtls))
 
 ### Globalmente no Cliente
 ```go
